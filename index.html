@@ -245,6 +245,9 @@
             <button class="control-btn" onclick="toggleCamera()">Перезапуск камеры</button>
             <button class="control-btn" onclick="toggleManualMode()" id="manualModeBtn">Ручной режим</button>
             <button class="control-btn" onclick="toggleDebug()" id="debugBtn">Отладка</button>
+            <button class="control-btn" onclick="toggleImmediateMode()" id="immediateModeBtn">
+                Быстрый режим
+            </button>
         </div>
 
         <div class="debug-info" id="debugInfo" style="display: none;">
@@ -315,9 +318,9 @@
         let totalBlinks = 0;
         
         const EAR_THRESHOLD = 0.25; // Eye Aspect Ratio threshold for blink detection
-        const CONSECUTIVE_FRAMES = 3; // Frames to confirm blink
-        const DOUBLE_BLINK_TIMEOUT = 1000; // ms to wait for double blink
-        const MODE_SWITCH_DELAY = 2000; // ms to switch from row to column mode
+        const CONSECUTIVE_FRAMES = 2; // Frames to confirm blink
+        const DOUBLE_BLINK_TIMEOUT = 500; // ms to wait for double blink
+        const MODE_SWITCH_DELAY = 1500; // ms to switch from row to column mode
 
         // Eye landmark indices for MediaPipe Face Mesh
         // const LEFT_EYE_INDICES = [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398];
@@ -365,11 +368,11 @@
 
                 faceMesh.setOptions({
                     maxNumFaces: 1,
-                    refineLandmarks: true,
-                    minDetectionConfidence: 0.5,
-                    minTrackingConfidence: 0.5
+                    refineLandmarks: false, // Disable for performance
+                    minDetectionConfidence: 0.7, // Higher for stability
+                    minTrackingConfidence: 0.6,
+                    processEveryNthFrame: 2
                 });
-
                 faceMesh.onResults(onResults);
 
                 // Initialize camera
@@ -378,8 +381,8 @@
                     onFrame: async () => {
                         await faceMesh.send({image: video});
                     },
-                    width: 640,
-                    height: 480
+                    width: 320, // 640,  // Lower resolution for mobile
+                    height: 240 // 480,
                 });
 
                 await camera.start();
@@ -481,31 +484,46 @@
                 Math.pow(point1.y - point2.y, 2)
             );
         }
-
+        let immediateMode = true; // for mobile
         function onBlink() {
             if (!currentState.isActive) return;
             
             totalBlinks++;
             const now = Date.now();
+            
+            if (immediateMode) {
+                // Immediate response mode
+                if (currentState.mode === 'row') {
+                    handleSingleBlink();
+                } else {
+                    selectCell(); // Direct selection
+                }
+                return;
+            }
+            
+            // Original double-blink logic...
             currentState.lastBlinkTime = now;
             currentState.blinkCount++;
             
-            // Clear existing timeout
             if (currentState.blinkTimeout) {
                 clearTimeout(currentState.blinkTimeout);
             }
             
-            // Set timeout for double blink detection
             currentState.blinkTimeout = setTimeout(() => {
                 if (currentState.blinkCount === 1) {
-                    // Single blink - navigate
                     handleSingleBlink();
                 } else if (currentState.blinkCount >= 2) {
-                    // Double blink - select
                     handleDoubleBlink();
                 }
                 currentState.blinkCount = 0;
             }, DOUBLE_BLINK_TIMEOUT);
+        }
+
+        // 6. Add immediate mode toggle
+        function toggleImmediateMode() {
+            immediateMode = !immediateMode;
+            const status = immediateMode ? 'включен' : 'выключен';
+            updateStatus(`Быстрый режим ${status}`);
         }
 
         function handleSingleBlink() {
