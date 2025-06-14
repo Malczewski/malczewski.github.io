@@ -245,9 +245,9 @@
             <button class="control-btn" onclick="toggleCamera()">Перезапуск камеры</button>
             <button class="control-btn" onclick="toggleManualMode()" id="manualModeBtn">Ручной режим</button>
             <button class="control-btn" onclick="toggleDebug()" id="debugBtn">Отладка</button>
-            <button class="control-btn" onclick="toggleImmediateMode()" id="immediateModeBtn">
+            <!-- <button class="control-btn" onclick="toggleImmediateMode()" id="immediateModeBtn">
                 Быстрый режим
-            </button>
+            </button> -->
         </div>
 
         <div class="debug-info" id="debugInfo" style="display: none;">
@@ -283,12 +283,12 @@
     <script>
         // Russian letters and words arranged by frequency
         const gridData = [
+            ['ДА', 'НЕТ', 'ПРОБЕЛ', 'СТОП', 'КОНЕЦ', 'ОТМЕНА'],
             ['О', 'А', 'Е', 'И', 'Н', 'Т'],
             ['Р', 'С', 'Л', 'В', 'К', 'М'],
             ['П', 'У', 'Д', 'Я', 'Ы', 'З'],
             ['Б', 'Г', 'Ч', 'Й', 'Х', 'Ж'],
             ['Ш', 'Ю', 'Ц', 'Щ', 'Э', 'Ф'],
-            ['ДА', 'НЕТ', 'ПРОБЕЛ', 'СТОП', 'КОНЕЦ', 'ОТМЕНА']
         ];
 
         let currentState = {
@@ -484,7 +484,7 @@
                 Math.pow(point1.y - point2.y, 2)
             );
         }
-        let immediateMode = true; // for mobile
+        let immediateMode = false; // for mobile
         function onBlink() {
             if (!currentState.isActive) return;
             
@@ -595,14 +595,13 @@
                     textInput.value = currentText.slice(0, -1);
                     break;
                 case 'ДА':
-                    textInput.value = currentText + 'ДА ';
+                    textInput.value = currentText + ' ДА ';
                     break;
                 case 'НЕТ':
-                    textInput.value = currentText + 'НЕТ ';
+                    textInput.value = currentText + ' НЕТ ';
                     break;
                 case 'СТОП':
-                    currentState.isActive = false;
-                    updateStatus('ОСТАНОВЛЕНО');
+                    textInput.value = currentText + ' СТОП ';
                     break;
                 case 'КОНЕЦ':
                     // Could trigger text-to-speech or save functionality
